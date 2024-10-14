@@ -30,7 +30,7 @@ if (prompt.includes("search") ||
     prompt.includes("hunt")) {
 		 const handleprompt = prompt.split(':');
 		  console.log(handleprompt)
-		const luregex = /lumin(e|ora),?\s*/gi;
+		const luregex = /lumin(e|ora),?\s*/gi; //<- add your own filter regex here
 		 const links = await searchGoogle(handleprompt[2] ? handleprompt[2].replace(luregex, '').trim() : '');
     const topLinks = links.slice(0, 10);
 
