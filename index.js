@@ -56,18 +56,6 @@ const chatmodel = genAI.getGenerativeModel({ model: "gemini-1.5-flash", safetySe
 	*/
   },});
 const Textchat = chatmodel.startChat()
-// Function
-async function searchGoogle(query) {
- console.log(query)
-  const customSearch = google.customsearch('v1');
-  const result = await customSearch.cse.list({
-    q: query,
-    cx: process.env.SEARCH_ENGINE,
-    auth: process.env.SEARCH_API_KEY,
-  });
-  return result.data.items.map((item) => item.link);
-}
-
 // Function to fetch content from URLs
 async function fetchContent(url) {
   try {
