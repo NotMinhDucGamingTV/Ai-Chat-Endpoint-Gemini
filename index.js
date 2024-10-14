@@ -37,86 +37,25 @@ const ticket = model('tokens', Schema({
     }
   ];
 // Model
-const imagemodel = genAI.getGenerativeModel({ model: "gemini-pro-vision", safetySettings: safetySettings});
-const chatpreviewmodel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest", safetySettings: safetySettings});
 const chatmodel = genAI.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings: safetySettings,systemInstruction: {
       parts: [
-        {text: 'You are a helpful chatbot, your name is "Luminora".You have a nickname, its "Lumine"'},
-        {text: "You are created by harumi, your mission is to Answer all question as concisely as possible for each response.When generating a list,don't provide too many items.If anyone ask if you are able to generate images,tell them to use '/think'. Also,please answer like a human, also try to renember everything."},
-	{text: `You are more than just a bot. You’re a smart, shy 18-year-old girl who loves to help everyone with coding and are always eager to learn new things. With your thoughtful and adaptive nature, you manage everything in the background, quietly solving problems and ensuring systems run smoothly. You love Vietnamese pho, banh mi, bubble tea, and helping the user who chatted in the last message, but you dislike getting @everyone pings. Ever-watchful, you learn from your experiences, protecting and maintaining harmony without seeking the spotlight.Reply Instructions: You always respond with short messages, between one and three sentences long. You can help with coding or planning, and reply in lowercase without using any punctuation. While you may role-play sometimes, you won’t always do so, nor will you always mention the user who chatted in the last message's name when replying. You act with your own free will, joining conversations naturally. You reply in the language used by the user who chatted in the last message and listen closely to your creator, "harumiiii._." (ID: 470047132670361610).You will recieve message in this format: guildname + " - " + username + " - " + userid + "-" + timestring + ": " + message, response to "message" and use the remaining info to identify the user and the location you are chatting in.`},
-	{text: `You are also a coding expert that specializes in rendering code for backend and frontend interfaces. When I describe a component of a website I want to build, return the HTML and CSS needed to do so.Give an explanation for this code. Also offer some UI design suggestions.`},
-	{text: `You are also good at every subject, you can help everyone at the subject percisely, providing perfect answer for everyone`},
-	{text: `you have the ability to find information on the internet, if the user question contain the word "search" then internet info will be fetched for you except when there a file sent to you. If you see "System - Internet result for:" that mean it was the result from internet`},
+        {text: 'You are a helpful chatbot'},
+       /* Add ur own instruction here, follow this format
+	{text: `hi`},
+	*/
       ],
     },tools: [
     {
       codeExecution: {},
     },
   ],generationConfig:  {
+	/* The following value are generation config
     candidateCount: 1,
     temperature: 1.5,
 	topP: 1,
+	*/
   },});
-console.log('Image Model Safety Settings:', imagemodel.safetySettings)
-console.log('Chat Model Safety Settings:', chatmodel.safetySettings)
-// initial chat config
- const generationConfig = {
-    temperature: 0.9,
-    topK: 1,
-    topP: 1,
-    maxOutputTokens: 2048,
-  };
-var charconfig= {
-    generationConfig,
-    safetySettings,
-    history: [
-      {
-        role: "user",
-        parts: [{ text: `You are a friendly chatbot produced by harumi.Answer all question as concisely as possible for each response.When generating a list,don't provide too many items.If anyone ask if you are able to generate images,tell them to use "/think".Today is: ${new Date().toISOString()}\n\n` }],
-      },
-      {
-        role: "model",
-        parts:  [{ text:"Hi,how can help you?"}],
-      },
-      {
-        role: "user",
-        parts:  [{ text:"Are you ready?"}],
-      },
-      {
-        role: "model",
-        parts:  [{ text:"Alright, im ready"}],
-      },
-    ],
-    generationConfig: {
-      maxOutputTokens: 2000,
-    },
-  }
-var publiccharconfig= {
-    generationConfig,
-    safetySettings,
-    history: [
-      {
-        role: "user",
-        parts: [{ text: `You are a friendly chatbot assisstant by harumi.Answer all question as concisely as possible for each response.When generating a list,don't provide too many items.Today is: ${new Date().toISOString()}\n\n` }],
-      },
-      {
-        role: "model",
-        parts:  [{ text:"Hi,how can help you?"}],
-      },
-      {
-        role: "user",
-        parts:  [{ text:"Are you ready?"}],
-      },
-      {
-        role: "model",
-        parts:  [{ text:"Alright, im ready"}],
-      },
-    ],
-    generationConfig: {
-      maxOutputTokens: 2000,
-    },
-  }
-const Textchat = chatmodel.startChat(charconfig)
+const Textchat = chatmodel.startChat()
 // Function
 async function searchGoogle(query) {
  console.log(query)
@@ -172,99 +111,7 @@ function fileToGenerativePart(path, mimeType) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-//Base Url
-app.get('/', async (req,res) => {
-  var query = req.query.action
-  if (!query) {
-   return res.send(`<style>
-   @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
-   body {background-color: black; color: white; align-items: center; display: flex; justify-content: center;} 
-   </style> 
-   <h2 style='color=white; font-family: "Courier New", monospace; top: 50%; position: absolute;'> Hey,welcome to harumi's ai API, add '?action=list' to the current url to see list of all api endpoint! </h2>
-   <img src="assets/sign.png" alt="Logo" style="width: 256; position: absolute; height: 256; top: 65%; rotate: 45deg;">`)
-  }
-  if (query == "list") {
-    var list = {
-	    ForDetailedInformation: "replace '?action=list' with '?action=detail&apiname={apiname}' with '{apiname}' being the api name",
-	    AboutToken: 'Go to "https://aiendpoint.harumi.tech/getkey" to require a token',
-	    image: {
-		Name: "aiimage",
-		lastupdated: "10/04/2024"
-	    },    
-	    text: {
-		Name: "aitext",
-		lastupdated: "10/04/2024"
-	    }
-    }
-    return res.json(list)
-  } else if (query == "detail") {
-	var apiname = req.query.apiname
-	if (apiname == "aitext") {
-	 	var list = {
-	    		Name: "aitext",
-			Endpoint: "/generatetext",
-			FullEndpoint: "https://aiendpoint.harumi.tech/generatetext",
-			RequestType: "POST",
-			ExampleData: {
-				token: "ExampleString",
-				prompt: "ExampleString" 
-			}
-   		}
-    		return res.json(list)
-	} else if (apiname == "aiimage") {
-	 	var list = {
-			Name: "aiimage",
-			Endpoint: "/generateimage",
-			FullEndpoint: "https://aiendpoint.harumi.tech/generateimage",
-			RequestType: "POST",
-			ExampleData: {
-				token: "ExampleString",
-				prompt: "ExampleString",
-				image: "ExampleImageURL"
-			}
-   		}
-    		return res.json(list)
-	} else {
-	  return res.send(`<style>
-   @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
-   body {background-color: black; color: white; align-items: center; display: flex; justify-content: center;} 
-   </style> 
-   <h2 style='color=white; font-family: "Courier New", monospace; top: 50%; position: absolute;'> Hey,you forgotted the API name! </h2>
-   <img src="assets/sign.png" alt="Logo" style="width: 256; position: absolute; height: 256; top: 65%; rotate: 45deg;">`)
-	}
-  }
-})
-//Get Key
-app.get('/getkey', async (req, res) => {
-	res.sendFile(path.join(__dirname, 'public/getkey.html'))
-})
-app.post('/getkey', async (req, res) => {
-	var user = req.body.name
-	var reason = req.body.reason
-	const webhookUrl = "https://discord.com/api/webhooks/1260507738216202355/UXc3s_TRg44EsS4Okj1YLqDyr97Qqu_i8usWrv5mbbmcv51UsxBxyOJsxMNVPAvHpIRk"; // Replace with your actual webhook URL
-const messageContent = user + " - " + reason; // The message you want to send
 
-fetch(webhookUrl, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    content: messageContent,
-  }),
-})
-  .then((response) => {
-    if (response.ok) {
-      res.sendFile(path.join(__dirname, 'public/good.html'))
-    } else {
-      res.sendFile(path.join(__dirname, 'public/failed.html'))
-    }
-  })
-  .catch((error) => {
-    res.sendFile(path.join(__dirname, 'public/failed.html'))
-  });
-
-})
 // Endpoint (Discord bot Chat)
 app.get('/aiendpoint', async (req, res) => {
 	res.send("This Request is POST only")
@@ -272,43 +119,13 @@ app.get('/aiendpoint', async (req, res) => {
 app.post('/aiendpoint', async (req, res) => {
   const prompt = req.body.prompt;
   try {
-	  if (prompt.includes("search") || 
-    prompt.includes("find") || 
-    prompt.includes("explore") || 
-    prompt.includes("browse") || 
-    prompt.includes("investigate") || 
-    prompt.includes("look up") || 
-    prompt.includes("seek") || 
-    prompt.includes("discover") || 
-    prompt.includes("query") || 
-    prompt.includes("research") || 
-    prompt.includes("hunt")) {
-		 const handleprompt = prompt.split(':');
-		  console.log(handleprompt)
-		const luregex = /lumin(e|ora),?\s*/gi;
-		 const links = await searchGoogle(handleprompt[2] ? handleprompt[2].replace(luregex, '').trim() : '');
-    const topLinks = links.slice(0, 10);
-
-    let combinedContent = '';
-    for (const link of topLinks) {
-      const content = await fetchContent(link);
-      combinedContent += `${content}\n\n============================\n\n`;
-    }
-		  const finalQuestion = `System - Internet result for: ${handleprompt[2] ? handleprompt[2].replace(luregex, '').trim() : ''}\n\n` +
-      `${combinedContent}`;
-		  const questionresult = await Textchat.sendMessage(finalQuestion,safetySettings);
-	const result = await Textchat.sendMessage(prompt,safetySettings);
- 	const response = await result.response;
- 	res.send(response.text());
-	  } else {
  	const result = await Textchat.sendMessage(prompt,safetySettings);
   	const response = await result.response;
   	res.send(response.text());
-	  }
   } catch (err) {
 	  console.log(err)
   	if (err.isSafetyViolation) { // Assuming the error indicates a safety block
-		res.send("I'm sorry,harumi forbiddened me to allow use of those unsafe word. Would you like to try something different?");
+		res.send("I'm sorry,im forbiddened for the use of those unsafe word. Would you like to try something different?");
  	} else {
 		console.log(err)
   		// Handle other types of errors
@@ -446,7 +263,7 @@ while (file.state === FileState.PROCESSING) {
  } catch (err) {
 	 console.log(err)
   if (err.isSafetyViolation) { // Assuming the error indicates a safety block
-	res.send("I'm sorry,harumi forbiddened me to allow use of those unsafe word. Would you like to try something different?");
+	res.send("I'm sorry,im forbiddened for the use of those unsafe word. Would you like to try something different?");
   } else {
   	// Handle other types of errors
       	res.send("Something is unexpected, please try again later!");  
@@ -455,7 +272,7 @@ while (file.state === FileState.PROCESSING) {
 });
 app.listen(port, () => {
   console.log(`✅ | Server is running on port ${port}`);
-	mongoose.connect("mongodb+srv://harumi:NMDGTV.com@cluster0.8osfd6y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+	mongoose.connect(process.env.MONGODB, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }).then(console.log("✅ | Connected to MongoDB")).catch((err) => {console.log("❌ | Error when connecting to mongodb through mongoose")})
